@@ -77,11 +77,21 @@ void connect() {
   }
 
   Serial.println("Connected!");
+  Serial.println();
+  Serial.println("This device is now ready for use!");
 }
 
 void setup() {
   Serial.begin(115200);
-  delay(100);
+  
+  // Giving it a little time because the serial monitor doesn't
+  // immediately attach. Want the workshop that's running to
+  // appear on each upload.
+  delay(2000);
+  
+  Serial.println();
+  Serial.println("Running Workshop 2 Firmware.");
+  
   pinMode(BUTTON_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
 

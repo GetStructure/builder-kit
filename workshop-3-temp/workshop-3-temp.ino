@@ -1,6 +1,6 @@
 /**
  * Workshop example for periodically sending temperature data.
- * 
+ *
  * Visit http://www.getstructure.io/kit for full instructions.
  *
  * Copyright (c) 2016 Structure. All rights reserved.
@@ -37,9 +37,9 @@ void toggle() {
 void handleCommand(StructureCommand *command) {
   Serial.print("Command received: ");
   Serial.println(command->name);
-  
+
   if(strcmp(command->name, "toggle") == 0) {
-    toggle(); 
+    toggle();
   }
 }
 
@@ -50,16 +50,16 @@ void connect() {
   Serial.println();
   Serial.print("Connecting to ");
   Serial.println(WIFI_SSID);
-  
+
   WiFi.begin(WIFI_SSID, WIFI_PASS);
-  
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
- 
+
   Serial.println("");
-  Serial.println("WiFi connected");  
+  Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
@@ -72,13 +72,22 @@ void connect() {
     delay(500);
     Serial.print(".");
   }
-  
+
   Serial.println("Connected!");
+  Serial.println("This device is now ready for use!");
 }
- 
+
 void setup() {
   Serial.begin(115200);
-  delay(100);
+  
+  // Giving it a little time because the serial monitor doesn't
+  // immediately attach. Want the workshop that's running to
+  // appear on each upload.
+  delay(2000);
+  
+  Serial.println();
+  Serial.println("Running Workshop 3 Firmware.");
+  
   pinMode(BUTTON_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
   device.onCommand(&handleCommand);
@@ -106,7 +115,7 @@ int buttonState = 0;
 int timeSinceLastRead = 0;
 int tempSum = 0;
 int tempCount = 0;
- 
+
 void loop() {
 
   bool toReconnect = false;
@@ -121,7 +130,7 @@ void loop() {
     Serial.println(device.mqttClient.state());
     toReconnect = true;
   }
-  
+
   if(toReconnect) {
     connect();
   }
@@ -138,13 +147,17 @@ void loop() {
   }
 
   tempSum += analogRead(A0);
-  tempCount++; 
+  tempCount++;
 
   // Report every 15 seconds.
   if(timeSinceLastRead > 15000) {
     // Take the average reading over the last 15 seconds.
     double raw = (double)tempSum / (double)tempCount;
-    double degreesC = (((raw / 1024.0) * 2.0) - 0.5) * 100.0;
+
+    // The tmp36 documentation requires the -0.5 offset, but during
+    // testing while attached to the Feather, all tmp36 sensors
+    // required a -0.52 offset for better accuracy.
+    double degreesC = (((raw / 1024.0) * 2.0) - 0.52) * 100.0;
     double degreesF = degreesC * 1.8 + 32;
 
     Serial.println();
@@ -155,7 +168,7 @@ void loop() {
     Serial.println();
 
     reportTemp(degreesC, degreesF);
-    
+
     timeSinceLastRead = 0;
     tempSum = 0;
     tempCount = 0;
@@ -164,5 +177,3 @@ void loop() {
   delay(100);
   timeSinceLastRead += 100;
 }
-
-
